@@ -179,7 +179,7 @@ public class Main {
                     );
                     String finalUrl = "https://www.youtube.com/watch?v=" + z.getId();
 
-                    sb2.append("<input type=\"text\" id=\"youtube_url\" name=\"youtube_url\" size=\"60\" width=\"60\" style=\"margint-bottom:20px;margin-right:10px;font-size:110%;padding:5px;\" value=\"" + finalUrl + "\">");
+                    sb2.append("<input type=\"text\" id=\"youtube_url\" name=\"youtube_url\" size=\"60\" width=\"60\" style=\"margint-bottom:20px;margin-right:10px;font-size:110%;padding:5px;\" value=\"" + finalUrl + "\"><br><br>");
                                         sb2.append("<a target=\"_blank\" href=\"").append(finalUrl).append("\">");
                     sb2.append(finalUrl).append("</a>").append("<br>");
                     String videoLocalUrl = "";
@@ -195,7 +195,7 @@ public class Main {
                             .append("/media/thumbnail.jpg\"></a><br>");
                     sb2.append("<span style=\"font-size:160%;font-weight:bold;\">").append(z.getTitle()).append("</span>");
                     sb2.append("<br><br>");
-                    sb2.append("<pre style=\"white-space: border:1px solid black;max-width:600px;padding:10px;min-height:50px;\">");
+                    sb2.append("<pre style=\"white-space: pre-wrap; border:1px solid black;max-width:600px;padding:10px;min-height:50px;\">");
                     sb2.append(z.getDescription().isBlank() ? "No description" : z.getDescription());
                     sb2.append("</pre>");
                     sb2.append("<h2>Comments</h2>");
