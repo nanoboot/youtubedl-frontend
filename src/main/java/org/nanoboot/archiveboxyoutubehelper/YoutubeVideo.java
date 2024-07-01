@@ -42,10 +42,16 @@ public class YoutubeVideo implements Comparable<YoutubeVideo> {
     private String channelUrl;
     private String channelId;
     private String uploadDate;
+    private long timestamp;
     private String description;
     private String thumbnail;
     private List<YoutubeComment> comments = new ArrayList<>();
-
+    private String previousVideoId = null;
+    private String nextVideoId = null;
+    private String ext = null;
+    private int number;
+    public static final List<String> missingYoutubeVideos = new ArrayList<>();
+    
     YoutubeVideo(File mediaDirectory) throws InterruptedException, IOException {
         File metadataFile = new File(mediaDirectory, "metadata");
         if (!Main.ALWAYS_COMPUTE_METADATA && metadataFile.exists()) {
@@ -91,19 +97,29 @@ public class YoutubeVideo implements Comparable<YoutubeVideo> {
         //
         Optional<File> descriptionFile = files.stream().filter(f -> f.getName().endsWith(".description")).findFirst();
 
+        ext = jsonObject.getString("ext");
+        
         Optional<File> videoFile = files
                 .stream()
-                .filter(
-                        f -> !f.getName().endsWith(".description")
-                        && !f.getName().endsWith(".json")
-                        && !f.getName().equals("metadata")
-                        && !f.getName().endsWith(thumbnail)
+                .filter(f -> 
+                        (f.getName().endsWith("." + ext)) ||
+                                (f.getName().endsWith(".mp4")) ||
+                                (f.getName().endsWith(".mkv"))
                 )
+//                .filter(
+//                        f -> !f.getName().endsWith(".description")
+//                        && !f.getName().endsWith(".json")
+//                        && !f.getName().equals("metadata")
+//                        && !f.getName().endsWith(thumbnail)
+//                )
                 .findFirst();
+        
+        snapshot = mediaDirectory.getParentFile().getName();
+        id = jsonObject.getString("id");
+        if(videoFile.isEmpty())missingYoutubeVideos.add(id);
         this.description = descriptionFile.isPresent() ? Utils.readTextFromFile(descriptionFile.get()) : "";
 
-        id = jsonObject.getString("id");
-        snapshot = mediaDirectory.getParentFile().getName();
+        
         title = jsonObject.getString("title");
         if (videoFile.isPresent() && !videoFile.get().getName().endsWith(".part")) {
             final File videoFileGet = videoFile.get();
@@ -116,6 +132,8 @@ public class YoutubeVideo implements Comparable<YoutubeVideo> {
         channelUrl = jsonObject.getString("channel_url");
         channelId = jsonObject.getString("channel_id");
         uploadDate = jsonObject.getString("upload_date");
+        timestamp = jsonObject.getLong("timestamp");
+        
 
         if (jsonObject.has("comments")) {
             final JSONArray jsonArray = jsonObject.getJSONArray("comments");
@@ -171,7 +189,11 @@ public class YoutubeVideo implements Comparable<YoutubeVideo> {
     @Override
     public int compareTo(YoutubeVideo o) {
         if (this.channelName != null && o.channelName != null && this.channelName.contentEquals(o.channelName)) {
+            if(this.uploadDate.equals(o.uploadDate)) {
+                return Long.valueOf(timestamp).compareTo(o.timestamp);
+            } else {
             return this.uploadDate.compareTo(o.uploadDate);
+            }
         } else {
             if (this.channelName != null && o.channelName != null) {
                 return this.channelName.compareTo(o.channelName);

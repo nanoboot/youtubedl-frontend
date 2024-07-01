@@ -46,12 +46,36 @@ public class Main {
         System.out.println("archiveboxyoutubehelper - HTML generator\n");
 
         if (args.length == 0) {
-            args = new String[]{"/rv/blupi/archivebox"};
+            args = new String[]{"/rv/blupi/archivebox"
+                    //, "--video", "eVqgt6s4h30"
+            };
         }
-        if (args.length != 1) {
-            System.err.println("One argument is expected, but the count of arguments is: " + args.length + ".");
+        if (args.length < 1) {
+            System.err.println("At least one argument is expected, but the count of arguments is: " + args.length + ".");
             System.exit(1);
         }
+        String argVideo = "";
+        String argChannel = "";
+        if(args.length > 1) {
+            for(int i = 1;i<args.length;i++) {
+                String s = args[i];
+                if(s.equals("--video")) {
+                    i++;
+                    if(i >= args.length) {
+                        throw new ArchiveBoxYoutubeHelperException("Fatal error: missing value for --video");
+                    }
+                    argVideo = args[i];
+                }
+                if(s.equals("--channel")) {
+                    i++;
+                    if(i >= args.length) {
+                        throw new ArchiveBoxYoutubeHelperException("Fatal error: missing value for --channel");
+                    }
+                    argChannel = args[i];
+                }
+            }
+        }
+        
         File archiveBoxRootDirectory = new File(args[0]);
         File archiveBoxArchiveDirectory = new File(archiveBoxRootDirectory, "archive");
         int i = 0;
@@ -64,6 +88,13 @@ public class Main {
                 continue;
             }
             YoutubeVideo youtubeVideo = new YoutubeVideo(mediaDirectory);
+            
+            if(!argVideo.isBlank() && !youtubeVideo.getId().equals(argVideo)) {
+                continue;
+            }
+            if(!argChannel.isBlank() && !youtubeVideo.getChannelId().equals(argChannel)) {
+                continue;
+            }
             i++;
             System.out.println("\n\nFound video #" + i);
 
@@ -83,6 +114,18 @@ public class Main {
             youtubeVideos.add(youtubeVideo);
         }
         Collections.sort(youtubeVideos);
+        YoutubeVideo previousVideo = null;
+        YoutubeVideo nextVideo = null;
+        YoutubeVideo currentVideo = null;
+        for(int j = 0; j<youtubeVideos.size(); j++) {
+            previousVideo = currentVideo;
+            currentVideo = youtubeVideos.get(j);
+            if(j < (youtubeVideos.size() - 1)) {
+                nextVideo = youtubeVideos.get(j+1);
+            }
+            if(previousVideo != null) currentVideo.setPreviousVideoId(previousVideo.getId());
+            if(nextVideo != null) currentVideo.setNextVideoId(nextVideo.getId());
+        }
         Map<String, String> channelUrls = new HashMap<>();
         List<String> channels = new ArrayList<>();
         youtubeVideos.stream().forEach(c -> {
@@ -150,6 +193,7 @@ public class Main {
                         .append(" •︎ ")
                         .append("#").append(iii)
                         .append("</td></tr>\n");
+                z.setNumber(iii);
                 sb.append("</table></div></td>\n");
                 if (videoNumberPerRow == VIDEOS_PER_ROW) {
                     sb.append("<tr>");
@@ -195,6 +239,16 @@ public class Main {
                             .append("/media/thumbnail.jpg\"></a><br>");
                     sb2.append("<span style=\"font-size:160%;font-weight:bold;\">").append(z.getTitle()).append("</span>");
                     sb2.append("<br><br>");
+                    sb2.append("#").append(z.getNumber()).append("&nbsp;&nbsp;&nbsp;");
+                    if(z.getPreviousVideoId() != null) sb2.append("<a href=\"./").append(z.getPreviousVideoId()).append(".html\">");
+                    sb2.append("Back");
+                    if(z.getPreviousVideoId() != null) sb2.append("</a>");
+                    sb2.append("&nbsp;&nbsp;&nbsp;");
+                    if(z.getNextVideoId()!= null) sb2.append("<a href=\"./").append(z.getNextVideoId()).append(".html\">");
+                    sb2.append("Next");
+                    if(z.getNextVideoId() != null) sb2.append("</a>");
+                    sb2.append(" ");
+                    sb2.append("<br>");
                     sb2.append("<pre style=\"white-space: pre-wrap; border:1px solid black;max-width:600px;padding:10px;min-height:50px;\">");
                     sb2.append(z.getDescription().isBlank() ? "No description" : z.getDescription());
                     sb2.append("</pre>");
@@ -253,6 +307,8 @@ sb2.append("<div style=\"margin-left:")
                   """);
         Utils.writeTextToFile(sb.toString(), videosHtmlFile);
 
+        System.out.println("[Warning] Snapshots without videos:");
+        YoutubeVideo.missingYoutubeVideos.forEach(s -> System.out.println(s));
     }
 
 }
