@@ -4,22 +4,26 @@
  */
 package org.nanoboot.archiveboxyoutubehelper;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.humble.video.Demuxer;
 import io.humble.video.DemuxerFormat;
 import io.humble.video.Global;
 import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Properties;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -29,6 +33,7 @@ import org.json.JSONObject;
  */
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class YoutubeVideo implements Comparable<YoutubeVideo> {
 
     private String id;
@@ -50,34 +55,66 @@ public class YoutubeVideo implements Comparable<YoutubeVideo> {
     private String nextVideoId = null;
     private String ext = null;
     private int number;
+    //
     public static final List<String> missingYoutubeVideos = new ArrayList<>();
-    
-    YoutubeVideo(File mediaDirectory) throws InterruptedException, IOException {
+
+    public YoutubeVideo(File mediaDirectory) throws InterruptedException, IOException {
         File metadataFile = new File(mediaDirectory, "metadata");
         if (!Main.ALWAYS_COMPUTE_METADATA && metadataFile.exists()) {
 
-            YoutubeVideo yv = new ObjectMapper().readValue(Utils.readTextFromFile(metadataFile), YoutubeVideo.class);
+            YoutubeVideo yv = new YoutubeVideo();
+            //new ObjectMapper().readValue(Utils.readTextFromFile(metadataFile), YoutubeVideo.class);
 
-            id = yv.id;
-            snapshot = yv.snapshot;
-            title = yv.title;
-            videoFileName = yv.videoFileName;
-            videoFileSizeInBytes = yv.videoFileSizeInBytes;
-            videoFileSha512HashSum = yv.videoFileSha512HashSum;
-            videoDuration = yv.videoDuration;
-            channelName = yv.channelName;
-            channelUrl = yv.channelUrl;
-            channelId = yv.channelId;
-            uploadDate = yv.uploadDate;
-            description = yv.description;
-            thumbnail = yv.thumbnail;
-            comments = yv.comments;
+            Properties properties = new Properties();
+            properties.load(new FileInputStream(metadataFile));
+
+            id = properties.getProperty("id");
+
+            if (!Main.argVideo.isBlank() && !id.equals(Main.argVideo)) {
+                return;
+            }
+            snapshot = properties.getProperty("snapshot");
+            title = properties.getProperty("title");
+            videoFileName = properties.getProperty("videoFileName");
+            videoFileSizeInBytes = Long.valueOf(properties.getProperty("videoFileSizeInBytes"));
+            videoFileSha512HashSum = properties.getProperty("videoFileSha512HashSum");
+            videoDuration = properties.getProperty("videoDuration");
+            channelName = properties.getProperty("channelName");
+            channelUrl = properties.getProperty("channelUrl");
+            channelId = properties.getProperty("channelId");
+            uploadDate = properties.getProperty("uploadDate");
+            timestamp = Long.parseLong(properties.getProperty("timestamp"));
+            description = properties.getProperty("description");
+            thumbnail = properties.getProperty("thumbnail");
+            comments = new ArrayList<>();
+            JSONArray ja = new JSONArray(properties.getProperty("comments"));
+            ja.forEach(o -> {
+                JSONObject jo = (JSONObject) o;
+                try {
+                    final String toString = o.toString();
+                    System.out.println(toString);
+                    comments.add(new ObjectMapper().readValue(toString, YoutubeComment.class));
+                } catch (JsonProcessingException ex) {
+
+                    throw new ArchiveBoxYoutubeHelperException(ex.getMessage());
+                }
+            }
+            );
+            previousVideoId = properties.getProperty("previousVideoId");
+            nextVideoId = properties.getProperty("nextVideoId");
+            ext = properties.getProperty("ext");
+            number = Integer.valueOf(properties.getProperty("number"));
             return;
         }
         List<File> files = Arrays.asList(mediaDirectory.listFiles());
         Optional<File> jsonFile = files.stream().filter(f -> f.getName().endsWith(".json")).findFirst();
         String json = jsonFile.isPresent() ? Utils.readTextFromFile(jsonFile.get()) : "";
         JSONObject jsonObject = new JSONObject(json);
+        id = jsonObject.getString("id");
+//        if(!Main.argVideo.isBlank() && !id.equals(Main.argVideo)) {
+//            return;
+//        }
+
         thumbnail = jsonObject.getString("thumbnail");
         if (thumbnail == null) {
             thumbnail = "";
@@ -98,28 +135,29 @@ public class YoutubeVideo implements Comparable<YoutubeVideo> {
         Optional<File> descriptionFile = files.stream().filter(f -> f.getName().endsWith(".description")).findFirst();
 
         ext = jsonObject.getString("ext");
-        
+
         Optional<File> videoFile = files
                 .stream()
-                .filter(f -> 
-                        (f.getName().endsWith("." + ext)) ||
-                                (f.getName().endsWith(".mp4")) ||
-                                (f.getName().endsWith(".mkv"))
+                .filter(f
+                        -> (f.getName().endsWith("." + ext))
+                || (f.getName().endsWith(".mp4"))
+                || (f.getName().endsWith(".mkv"))
                 )
-//                .filter(
-//                        f -> !f.getName().endsWith(".description")
-//                        && !f.getName().endsWith(".json")
-//                        && !f.getName().equals("metadata")
-//                        && !f.getName().endsWith(thumbnail)
-//                )
+                //                .filter(
+                //                        f -> !f.getName().endsWith(".description")
+                //                        && !f.getName().endsWith(".json")
+                //                        && !f.getName().equals("metadata")
+                //                        && !f.getName().endsWith(thumbnail)
+                //                )
                 .findFirst();
-        
+
         snapshot = mediaDirectory.getParentFile().getName();
-        id = jsonObject.getString("id");
-        if(videoFile.isEmpty())missingYoutubeVideos.add(id);
+
+        if (videoFile.isEmpty()) {
+            missingYoutubeVideos.add(id);
+        }
         this.description = descriptionFile.isPresent() ? Utils.readTextFromFile(descriptionFile.get()) : "";
 
-        
         title = jsonObject.getString("title");
         if (videoFile.isPresent() && !videoFile.get().getName().endsWith(".part")) {
             final File videoFileGet = videoFile.get();
@@ -133,7 +171,6 @@ public class YoutubeVideo implements Comparable<YoutubeVideo> {
         channelId = jsonObject.getString("channel_id");
         uploadDate = jsonObject.getString("upload_date");
         timestamp = jsonObject.getLong("timestamp");
-        
 
         if (jsonObject.has("comments")) {
             final JSONArray jsonArray = jsonObject.getJSONArray("comments");
@@ -143,22 +180,44 @@ public class YoutubeVideo implements Comparable<YoutubeVideo> {
                 comments.add(new YoutubeComment((JSONObject) o));
             }
         }
-        Collections.sort(this.comments);
-        Utils.writeTextToFile(new JSONObject(this).toString(), metadataFile);
+        this.comments = YoutubeComment.sort(this.comments);
+//
+        Properties properties = new Properties();
+
+        properties.put("id", id);
+        properties.put("snapshot", snapshot);
+        properties.put("title", title);
+        properties.put("videoFileName", videoFileName);
+        properties.put("videoFileSizeInBytes", String.valueOf(videoFileSizeInBytes));
+        properties.put("videoFileSha512HashSum", videoFileSha512HashSum);
+        properties.put("videoDuration", videoDuration);
+        properties.put("channelName", channelName);
+        properties.put("channelUrl", channelUrl);
+        properties.put("channelId", channelId);
+        properties.put("uploadDate", uploadDate);
+        properties.put("timestamp", String.valueOf(timestamp));
+        properties.put("description", description);
+        properties.put("thumbnail", thumbnail);
+        properties.put("comments", new JSONArray(comments).toString());
+        if (previousVideoId != null) {
+            properties.put("previousVideoId", previousVideoId);
+        }
+        if (nextVideoId != null) {
+            properties.put("nextVideoId", nextVideoId);
+        }
+        properties.put("ext", ext);
+        properties.put("number", String.valueOf(number));
+
+        //Utils.writeTextToFile(new JSONObject(this).toString(), metadataFile);
+        properties.store(new FileWriter(metadataFile), "store to properties file");
     }
 
     private static String getVideoFormattedDuration(String arg) throws InterruptedException, IOException {
-        // In Humble, all objects have special contructors named 'make'.
 
-        // A Demuxer opens up media containers, parses  and de-multiplexes the streams
-        // of media data without those containers.
         final Demuxer demuxer = Demuxer.make();
 
-        // We open the demuxer by pointing it at a URL.
         demuxer.open(arg, null, false, true, null, null);
 
-        // Once we've opened a demuxer, Humble can make a guess about the
-        // DemuxerFormat. Humble supports over 100+ media container formats.
         final DemuxerFormat format = demuxer.getFormat();
 
         final long duration = demuxer.getDuration();
@@ -189,10 +248,10 @@ public class YoutubeVideo implements Comparable<YoutubeVideo> {
     @Override
     public int compareTo(YoutubeVideo o) {
         if (this.channelName != null && o.channelName != null && this.channelName.contentEquals(o.channelName)) {
-            if(this.uploadDate.equals(o.uploadDate)) {
+            if (this.uploadDate.equals(o.uploadDate)) {
                 return Long.valueOf(timestamp).compareTo(o.timestamp);
             } else {
-            return this.uploadDate.compareTo(o.uploadDate);
+                return this.uploadDate.compareTo(o.uploadDate);
             }
         } else {
             if (this.channelName != null && o.channelName != null) {

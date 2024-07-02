@@ -38,24 +38,26 @@ public class Main {
 
     private static int iii = 0;
     private static int videoNumberPerRow = 0;
-    public static final boolean ALWAYS_COMPUTE_METADATA = true;
+    public static final boolean ALWAYS_COMPUTE_METADATA = false;
     public static final int VIDEOS_PER_ROW = 4;
     private static int THUMBNAIL_WIDTH = 250;
+    public static String argVideo;
+    public static String argChannel;
 
     public static void main(String[] args) throws IOException, InterruptedException {
         System.out.println("archiveboxyoutubehelper - HTML generator\n");
 
         if (args.length == 0) {
             args = new String[]{"/rv/blupi/archivebox"
-                    //, "--video", "eVqgt6s4h30"
+                    //, "--video", "gPU_onaTzXs"
             };
         }
         if (args.length < 1) {
             System.err.println("At least one argument is expected, but the count of arguments is: " + args.length + ".");
             System.exit(1);
         }
-        String argVideo = "";
-        String argChannel = "";
+        argVideo = "";
+        argChannel = "";
         if(args.length > 1) {
             for(int i = 1;i<args.length;i++) {
                 String s = args[i];
@@ -88,7 +90,9 @@ public class Main {
                 continue;
             }
             YoutubeVideo youtubeVideo = new YoutubeVideo(mediaDirectory);
-            
+                    if(!Main.argVideo.isBlank() && !youtubeVideo.getId().equals(Main.argVideo)) {
+                        continue;
+                    }
             if(!argVideo.isBlank() && !youtubeVideo.getId().equals(argVideo)) {
                 continue;
             }
@@ -200,6 +204,9 @@ public class Main {
                     videoNumberPerRow = 0;
                 }
                 File videoHtmlFile = new File(videosDirectory, z.getId() + ".html");
+//                if(videoHtmlFile.exists()) {
+//                    
+//                }
                 {
                     StringBuilder sb2 = new StringBuilder("""
                    <!DOCTYPE html>
