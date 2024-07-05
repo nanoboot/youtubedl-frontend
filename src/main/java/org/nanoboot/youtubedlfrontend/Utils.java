@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////
-// archivebox-youtube-helper: Tool generating html pages for Archive Box.
+// youtubedl-frontend: Tool generating html pages for Archive Box.
 // Copyright (C) 2024 the original author or authors.
 //
 // This program is free software; you can redistribute it and/or
@@ -16,7 +16,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ///////////////////////////////////////////////////////////////////////////////////////////////
-package org.nanoboot.archiveboxyoutubehelper;
+package org.nanoboot.youtubedlfrontend;
 
 import dev.mccue.guava.hash.Hashing;
 import java.io.BufferedReader;
@@ -99,7 +99,7 @@ public class Utils {
         return result;//.substring(0, result.length() - 1);
     }
 
-    public static void copyFile(File originalFile, File copiedFile) throws ArchiveBoxYoutubeHelperException {
+    public static void copyFile(File originalFile, File copiedFile) throws YoutubedlFrontendException {
         Path originalPath = originalFile.toPath();
         Path copied = new File(copiedFile, originalFile.getName()).toPath();
 
@@ -107,7 +107,7 @@ public class Utils {
             Files.copy(originalPath, copied, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException ex) {
             ex.printStackTrace();
-            throw new ArchiveBoxYoutubeHelperException("Copying file failed: " + originalFile.getAbsolutePath());
+            throw new YoutubedlFrontendException("Copying file failed: " + originalFile.getAbsolutePath());
         }
     }
 
@@ -117,7 +117,7 @@ public class Utils {
             fileWriter = new FileWriter(file);
         } catch (IOException ex) {
             ex.printStackTrace();
-            throw new ArchiveBoxYoutubeHelperException("Writing to file failed: " + file.getName(), ex);
+            throw new YoutubedlFrontendException("Writing to file failed: " + file.getName(), ex);
         }
         PrintWriter printWriter = new PrintWriter(fileWriter);
         printWriter.print(text);
@@ -131,7 +131,7 @@ public class Utils {
         try {
             return new String(Files.readAllBytes(Paths.get(file.getAbsolutePath())));
         } catch (IOException ex) {
-            throw new ArchiveBoxYoutubeHelperException("Reading file failed: " + file.getName(), ex);
+            throw new YoutubedlFrontendException("Reading file failed: " + file.getName(), ex);
         }
     }
 
@@ -141,7 +141,7 @@ public class Utils {
             InputStream inputStream = clazz.getResourceAsStream(fileName);
             return readFromInputStream(inputStream);
         } catch (IOException ex) {
-            throw new ArchiveBoxYoutubeHelperException("Reading file failed: " + fileName, ex);
+            throw new YoutubedlFrontendException("Reading file failed: " + fileName, ex);
         }
 
     }
@@ -164,7 +164,7 @@ public class Utils {
             return dev.mccue.guava.io.Files.hash(file, Hashing.sha512()).toString();
         } catch (IOException ex) {
             System.err.println(ex.getMessage());
-            throw new ArchiveBoxYoutubeHelperException(ex.getMessage());
+            throw new YoutubedlFrontendException(ex.getMessage());
         }
     }
 

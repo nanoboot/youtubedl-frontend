@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package org.nanoboot.archiveboxyoutubehelper;
+package org.nanoboot.youtubedlfrontend;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
+import javax.imageio.ImageIO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -50,6 +51,7 @@ public class YoutubeVideo implements Comparable<YoutubeVideo> {
     private long timestamp;
     private String description;
     private String thumbnail;
+    private String miniThumbnail;
     private List<YoutubeComment> comments = new ArrayList<>();
     private String previousVideoId = null;
     private String nextVideoId = null;
@@ -60,7 +62,7 @@ public class YoutubeVideo implements Comparable<YoutubeVideo> {
 
     public YoutubeVideo(File mediaDirectory) throws InterruptedException, IOException {
         File metadataFile = new File(mediaDirectory, "metadata");
-        if (!Main.ALWAYS_COMPUTE_METADATA && metadataFile.exists()) {
+        if (!Main.argAlwaysGenerateMetadata && metadataFile.exists()) {
 
             YoutubeVideo yv = new YoutubeVideo();
             //new ObjectMapper().readValue(Utils.readTextFromFile(metadataFile), YoutubeVideo.class);
@@ -86,6 +88,7 @@ public class YoutubeVideo implements Comparable<YoutubeVideo> {
             timestamp = Long.parseLong(properties.getProperty("timestamp"));
             description = properties.getProperty("description");
             thumbnail = properties.getProperty("thumbnail");
+            miniThumbnail = properties.getProperty("miniThumbnail");
             comments = new ArrayList<>();
             JSONArray ja = new JSONArray(properties.getProperty("comments"));
             ja.forEach(o -> {
@@ -96,7 +99,7 @@ public class YoutubeVideo implements Comparable<YoutubeVideo> {
                     comments.add(new ObjectMapper().readValue(toString, YoutubeComment.class));
                 } catch (JsonProcessingException ex) {
 
-                    throw new ArchiveBoxYoutubeHelperException(ex.getMessage());
+                    throw new YoutubedlFrontendException(ex.getMessage());
                 }
             }
             );
@@ -119,17 +122,82 @@ public class YoutubeVideo implements Comparable<YoutubeVideo> {
         if (thumbnail == null) {
             thumbnail = "";
         }
-        File thumbnailFile = new File(mediaDirectory, "thumbnail.jpg");
-        if (!thumbnailFile.exists() && thumbnail != null) {
-            try (BufferedInputStream in = new BufferedInputStream(new URL(thumbnail).openStream()); FileOutputStream fileOutputStream = new FileOutputStream(thumbnailFile.getAbsolutePath())) {
-                byte dataBuffer[] = new byte[1024];
-                int bytesRead;
-                while ((bytesRead = in.read(dataBuffer, 0, 1024)) != -1) {
-                    fileOutputStream.write(dataBuffer, 0, bytesRead);
+        JSONArray thumbnails = jsonObject.getJSONArray("thumbnails");
+        for (int i = 0; i < thumbnails.length(); i++) {
+            JSONObject o = (JSONObject) thumbnails.get(i);
+            if (!o.has("width")) {
+                continue;
+            } else {
+                int width = o.getInt("width");
+                if (width < (((double)Main.THUMBNAIL_WIDTH) * 0.8d)) {
+                    continue;
                 }
-            } catch (IOException e) {
-                System.out.println(e.getMessage());
+                miniThumbnail = o.getString("url");
+                break;
             }
+
+        }
+
+        File thumbnailFile = new File(mediaDirectory, "thumbnail." + getThumbnailFormat());
+        File miniThumbnailFile = new File(mediaDirectory, "mini-thumbnail." + getMiniThumbnailFormat());
+
+//        new File(mediaDirectory, "thumbnail.jpg").delete();
+//        new File(mediaDirectory, "mini-thumbnail.jpg").delete();
+//        new File(mediaDirectory, "thumbnail.webp").delete();
+//        new File(mediaDirectory, "mini-thumbnail.webp").delete();
+
+        if (thumbnail != null) {
+            if (!thumbnailFile.exists()) {
+                try (BufferedInputStream in = new BufferedInputStream(new URL(thumbnail).openStream()); FileOutputStream fileOutputStream = new FileOutputStream(thumbnailFile.getAbsolutePath())) {
+                    byte dataBuffer[] = new byte[1024];
+                    int bytesRead;
+                    while ((bytesRead = in.read(dataBuffer, 0, 1024)) != -1) {
+                        fileOutputStream.write(dataBuffer, 0, bytesRead);
+                    }
+                } catch (IOException e) {
+                    System.out.println(e.getMessage());
+                }
+            }
+            if (!miniThumbnailFile.exists()) {
+                try (BufferedInputStream in = new BufferedInputStream(new URL(miniThumbnail).openStream()); FileOutputStream fileOutputStream = new FileOutputStream(miniThumbnailFile.getAbsolutePath())) {
+                    byte dataBuffer[] = new byte[1024];
+                    int bytesRead;
+                    while ((bytesRead = in.read(dataBuffer, 0, 1024)) != -1) {
+                        fileOutputStream.write(dataBuffer, 0, bytesRead);
+                    }
+                } catch (IOException e) {
+                    System.out.println(e.getMessage());
+                }
+            }
+//            for (String s : ImageIO.getReaderFormatNames()) {
+//                System.out.println(s);
+//            }
+            //if(!miniThumbnailFile.exists()) {
+
+//String miniThumbnailFileAbsolutePath = miniThumbnailFile.getAbsolutePath();
+//            String formatName = miniThumbnailFileAbsolutePath.substring(miniThumbnailFileAbsolutePath
+//                    .lastIndexOf(".") + 1);
+//            BufferedImage inputImage = ImageIO.read(thumbnailFile);
+//            if(inputImage == null) {
+//
+//            }
+//            int thumbnailWidth = inputImage.getWidth();
+//            int thumbnailHeight = inputImage.getHeight();
+//            double heightWidthRatio = ((double) thumbnailHeight) / ((double) thumbnailWidth);
+//            int miniThumbnailWidth = Main.THUMBNAIL_WIDTH;
+//            int miniThumbnailHeight = (int) (heightWidthRatio * ((double) Main.THUMBNAIL_WIDTH));
+//
+//            BufferedImage outputImage = new BufferedImage(miniThumbnailWidth,
+//                    miniThumbnailHeight, inputImage.getType());
+//
+//            Graphics2D g2d = outputImage.createGraphics();
+//            g2d.drawImage(inputImage, 0, 0, miniThumbnailWidth, miniThumbnailHeight, null);
+//            g2d.dispose();
+//
+//            
+//
+//            ImageIO.write(outputImage, formatName, new File(miniThumbnailFileAbsolutePath));
+            //}
         }
         //
         Optional<File> descriptionFile = files.stream().filter(f -> f.getName().endsWith(".description")).findFirst();
@@ -198,6 +266,7 @@ public class YoutubeVideo implements Comparable<YoutubeVideo> {
         properties.put("timestamp", String.valueOf(timestamp));
         properties.put("description", description);
         properties.put("thumbnail", thumbnail);
+        properties.put("minithumbnail", miniThumbnail);
         properties.put("comments", new JSONArray(comments).toString());
         if (previousVideoId != null) {
             properties.put("previousVideoId", previousVideoId);
@@ -223,6 +292,32 @@ public class YoutubeVideo implements Comparable<YoutubeVideo> {
         final long duration = demuxer.getDuration();
         return formatTimeStamp(duration);
 
+    }
+
+    public String getThumbnailFormat() {
+        return getExtensionFromUrl(thumbnail);
+    }
+
+    public String getMiniThumbnailFormat() {
+        return getExtensionFromUrl(miniThumbnail);
+    }
+    private String getExtensionFromUrl(String url) {
+                String result = url.substring(url
+                .lastIndexOf(".") + 1);
+        int questionMarkIndex = 0;
+        for(int i = 0;i<result.length();i++) {
+            char ch = result.charAt(i);
+            if(ch != '?') {
+                continue;
+            } else {
+                questionMarkIndex = i;
+            }
+        }
+        if(questionMarkIndex > 0) {
+            result = result.substring(0, questionMarkIndex);
+        }
+        return result;
+        
     }
 
     /**

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
- archivebox-youtube-helper: Tool generating html pages for Archive Box.
+ youtubedl-frontend: Tool generating html pages for Archive Box.
  Copyright (C) 2024 the original author or authors.
 
  This program is free software; you can redistribute it and/or
@@ -29,12 +29,12 @@
     </parent>
 
     <groupId>org.nanoboot.tools</groupId>
-    <artifactId>archivebox-youtube-helper</artifactId>
+    <artifactId>youtubedl-frontend</artifactId>
     <version>0.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>archivebox-youtube-helper</name>
-    <description>archivebox-youtube-helper</description>
+    <name>youtubedl-frontend</name>
+    <description>youtubedl-frontend</description>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -82,7 +82,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>org.nanoboot.archiveboxyoutubehelper.Main</mainClass>
+                            <mainClass>org.nanoboot.youtubedlfrontend.Main</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
@@ -187,6 +187,21 @@
             <artifactId>jackson-databind</artifactId>
             <version>2.17.1</version>
         </dependency>
+<!--        <dependency>
+            <groupId>com.github.jai-imageio</groupId>
+            <artifactId>jai-imageio-core</artifactId>
+            <version>1.4.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.jai-imageio</groupId>
+            <artifactId>jai-imageio-jpeg2000</artifactId>
+            <version>1.4.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.sejda.imageio</groupId>
+            <artifactId>webp-imageio</artifactId>
+            <version>0.1.6</version>
+        </dependency>-->
 
     </dependencies>
 
@@ -200,6 +215,11 @@
             <id>snapshots</id>
             <name>nanoboot-snapshots-repository</name>
             <url>https://maven.nanoboot.org/snapshots</url>
+        </repository>
+        <repository>
+            <id>AsposeJavaAPI</id>
+            <name>Aspose Java API</name>
+            <url>https://repository.aspose.com/repo/</url>
         </repository>
     </repositories>
 

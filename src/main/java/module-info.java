@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////
-// archiveboxyoutubehelper: 
+// youtubedlfrontend: 
 // Copyright (C) 2024 the original author or authors.
 //
 // This program is free software; you can redistribute it and/or
@@ -17,7 +17,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-module archiveboxyoutubehelper {
+module youtubedlfrontend {
     requires lombok;
     requires org.apache.logging.log4j;
     requires org.json;
@@ -25,4 +25,5 @@ module archiveboxyoutubehelper {
     requires humble.video.noarch;
     requires humble.video.all;
     requires com.fasterxml.jackson.databind;
+    requires java.desktop;
 }

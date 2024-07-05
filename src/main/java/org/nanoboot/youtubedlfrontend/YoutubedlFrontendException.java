@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////
-// archivebox-youtube-helper: Tool generating html pages for Archive Box.
+// youtubedl-frontend: Tool generating html pages for Archive Box.
 // Copyright (C) 2024 the original author or authors.
 //
 // This program is free software; you can redistribute it and/or
@@ -17,19 +17,19 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-package org.nanoboot.archiveboxyoutubehelper;
+package org.nanoboot.youtubedlfrontend;
 
 /**
  * @author <a href="mailto:robertvokac@nanoboot.org">Robert Vokac</a>
  * @since 0.0.0
  */
-public class ArchiveBoxYoutubeHelperException extends RuntimeException {
+public class YoutubedlFrontendException extends RuntimeException {
 
-    public ArchiveBoxYoutubeHelperException(String msg) {
+    public YoutubedlFrontendException(String msg) {
         super(msg);
     }
 
-    public ArchiveBoxYoutubeHelperException(String msg, Exception e) {
+    public YoutubedlFrontendException(String msg, Exception e) {
         super(msg, e);
     }
     
