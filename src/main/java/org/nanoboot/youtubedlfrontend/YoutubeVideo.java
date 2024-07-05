@@ -266,7 +266,7 @@ public class YoutubeVideo implements Comparable<YoutubeVideo> {
         properties.put("timestamp", String.valueOf(timestamp));
         properties.put("description", description);
         properties.put("thumbnail", thumbnail);
-        properties.put("minithumbnail", miniThumbnail);
+        properties.put("miniThumbnail", miniThumbnail);
         properties.put("comments", new JSONArray(comments).toString());
         if (previousVideoId != null) {
             properties.put("previousVideoId", previousVideoId);

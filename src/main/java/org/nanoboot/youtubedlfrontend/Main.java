@@ -48,7 +48,7 @@ public class Main {
     public static void main(String[] args) throws IOException, InterruptedException {
         System.out.println("youtubedlfrontend - HTML generator\n");
 
-        args = "/rv/blupi/archivebox --_video UDpsz1yIwiw --always-generate-metadata 1 --always-generate-html-files 1 --videos-per-row 4".split(" ");
+        args = "/rv/blupi/archivebox --_video UDpsz1yIwiw --always-generate-metadata 1 --always-generate-html-files 0 --videos-per-row 4".split(" ");
         //args = "/rv/databig/youtube --_video UDpsz1yIwiw --always-generate-metadata 1 --always-generate-html-files 1 --videos-per-row 4".split(" ");
 
         if (args.length < 1) {
@@ -177,6 +177,7 @@ public class Main {
             System.out.println("uploadDate = " + youtubeVideo.getUploadDate());
             System.out.println("description = " + youtubeVideo.getDescription());
             System.out.println("thumbnail = " + youtubeVideo.getThumbnail());
+            System.out.println("miniThumbnail = " + youtubeVideo.getMiniThumbnail());
             System.out.println("comments = " + youtubeVideo.getComments());
             youtubeVideos.add(youtubeVideo);
         }
