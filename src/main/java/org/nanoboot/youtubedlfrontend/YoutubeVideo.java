@@ -15,7 +15,9 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -68,7 +70,8 @@ public class YoutubeVideo implements Comparable<YoutubeVideo> {
             //new ObjectMapper().readValue(Utils.readTextFromFile(metadataFile), YoutubeVideo.class);
 
             Properties properties = new Properties();
-            properties.load(new FileInputStream(metadataFile));
+            var input = new FileInputStream(metadataFile);
+            properties.load(new InputStreamReader(input, Charset.forName("UTF-8")));
 
             id = properties.getProperty("id");
 

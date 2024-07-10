@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -48,12 +50,13 @@ public class Main {
     public static void main(String[] args) throws IOException, InterruptedException {
         System.out.println("youtubedlfrontend - HTML generator\n");
 
-        args = "/rv/blupi/archivebox --_video UDpsz1yIwiw --always-generate-metadata 1 --always-generate-html-files 0 --videos-per-row 4".split(" ");
+        
         //args = "/rv/databig/youtube --_video UDpsz1yIwiw --always-generate-metadata 1 --always-generate-html-files 1 --videos-per-row 4".split(" ");
 
         if (args.length < 1) {
-            System.err.println("At least one argument is expected, but the count of arguments is: " + args.length + ".");
-            System.exit(1);
+            //System.err.println("At least one argument is expected, but the count of arguments is: " + args.length + ".");
+            args = "/rv/blupi/archivebox --_video UDpsz1yIwiw --always-generate-metadata 0 --always-generate-html-files 1 --videos-per-row 4".split(" ");
+            //System.exit(1);
         }
         argVideo = "";
         argChannel = "";
@@ -165,6 +168,14 @@ public class Main {
             i++;
             System.out.println("\n\nFound video #" + i);
 
+            for(File f:new File(archiveBoxArchiveDirectory + "/" +youtubeVideo.getSnapshot() +  "/media/" + youtubeVideo.getVideoFileName()).getParentFile().listFiles()) {
+                if(f.getName().endsWith(".webm")) {
+                    //mkv file was manually converted to webm
+                    youtubeVideo.setVideoFileName(f.getName());
+                    break;
+                }
+                
+            }
             System.out.println("id = " + youtubeVideo.getId());
             System.out.println("snapshot = " + youtubeVideo.getSnapshot());
             System.out.println("title = " + youtubeVideo.getTitle());
@@ -238,7 +249,7 @@ public class Main {
                   </head>
                   <body>
                   """);
-
+        NumberFormat formatter = new DecimalFormat("#0.00");
         channels.forEach(c -> {
             sb.append("<h1>").append(c).append("</h1>\n");
             sb.append("<div style=\"max-width:").append((Main.THUMBNAIL_WIDTH + 20) * Main.argVideosPerRow).append("px\"><a href =\"").append(channelUrls.get(c)).append("\">").append(channelUrls.get(c)).append("</a><div class=\"videos\">");
@@ -283,6 +294,7 @@ public class Main {
                    <!DOCTYPE html>
                   <html>
                   <head>
+                  <meta charset="UTF-8">                                    
                   <link rel="icon" type="image/x-icon" href="../favicon.ico" sizes="16x16">
                   <title>"""
                             + z.getTitle()
@@ -311,22 +323,29 @@ public class Main {
                         throw new YoutubedlFrontendException(ex.getMessage());
                     }
                     if(!z.getVideoFileName().endsWith(".mkv")) {
-                        try {
+                        //try {
                             sb2.append("<video src=\"");
                             
-                            sb2.append("../archive/" + z.getSnapshot() + "/media/" + URLEncoder.encode(z.getVideoFileName(), StandardCharsets.UTF_8.toString()).replace("+", "%20"));
+                            sb2.append("../archive/" + z.getSnapshot() + "/media/" 
+                                    + 
+//                                    URLEncoder.encode(
+                                            z.getVideoFileName()
+//                                            , StandardCharsets.UTF_8.toString()
+//                                    )
+                                    //        .replace("+", "%20")
+                            );
                             sb2.append("""
-                                                                         " controls width=\"800\">
+                                                                         " controls height=\"500px\">
                                                                Your browser does not support the video tag.
                                                                </video><br>
                                                                """);
-                        } catch (UnsupportedEncodingException ex) {
-                            throw new YoutubedlFrontendException(ex.getMessage());
-                        }
+//                        } catch (UnsupportedEncodingException ex) {
+//                            throw new YoutubedlFrontendException(ex.getMessage());
+//                        }
                     } else {
                     sb2.append("<a target=\"_blank\" href=\"").append(videoLocalUrl).append("\">");
 
-                    sb2.append("<img style=\"margin:10px;width:600px;\" src=\"../archive/")
+                    sb2.append("<img style=\"margin:10px;height:500px;\" src=\"../archive/")
                             .append(z.getSnapshot())
                             .append("/media/thumbnail.")
                             .append(z.getThumbnailFormat())
@@ -351,6 +370,14 @@ public class Main {
                         sb2.append("</a>");
                     }
                     sb2.append(" ");
+                    sb2
+                            .append("<br><br><a href=\"../archive/")
+                            .append(z.getSnapshot())
+                            .append("/media/")
+                            .append(z.getVideoFileName())
+                            .append("\">Download</a> ");
+
+                    sb2.append(formatter.format(((double)z.getVideoFileSizeInBytes()) / 1024d / 1024d)).append(" MB");
                     sb2.append("<br>\n");
                     sb2.append("<pre style=\"white-space: pre-wrap; border:1px solid black;max-width:600px;padding:10px;min-height:50px;\">");
                     sb2.append(z.getDescription().isBlank() ? "No description" : z.getDescription());
