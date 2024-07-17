@@ -119,7 +119,12 @@
         </dependency>
         <dependency>
             <groupId>org.nanoboot.powerframework</groupId>
-            <artifactId>power-random</artifactId>
+            <artifactId>power-utils</artifactId>
+            <version>${power.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.nanoboot.powerframework</groupId>
+            <artifactId>power-io</artifactId>
             <version>${power.version}</version>
         </dependency>
 

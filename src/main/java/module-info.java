@@ -26,4 +26,6 @@ module youtubedlfrontend {
     requires humble.video.all;
     requires com.fasterxml.jackson.databind;
     requires java.desktop;
+    requires powerframework.io;
+    requires powerframework.utils;
 }

@@ -168,4 +168,19 @@ public class Utils {
         }
     }
 
+    public static boolean convertStringToBoolean(String s) {
+        switch (s) {
+            case "1":
+                return true;
+            case "true":
+                return true;
+            case "0":
+                return false;
+            case "false":
+                return false;
+            default:
+                throw new YoutubedlFrontendException("Could not create boolean from String: " + s);
+        }
+    }
+    
 }
