@@ -19,8 +19,12 @@
 package org.nanoboot.youtubedlfrontend;
 
 import dev.mccue.guava.hash.Hashing;
+import java.awt.Image;
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,6 +37,7 @@ import java.nio.file.StandardCopyOption;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import javax.imageio.ImageIO;
 
 /**
  *
@@ -182,5 +187,17 @@ public class Utils {
                 throw new YoutubedlFrontendException("Could not create boolean from String: " + s);
         }
     }
-    
+    public static byte[] resizeImage(InputStream inputStream, int width, int height, String formatName) throws IOException {
+        BufferedImage sourceImage = ImageIO.read(inputStream);
+        Image thumbnail = sourceImage.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+        BufferedImage bufferedThumbnail = new BufferedImage(thumbnail.getWidth(null),
+                thumbnail.getHeight(null),
+                BufferedImage.TYPE_INT_RGB);
+        bufferedThumbnail.getGraphics().drawImage(thumbnail, 0, 0, null);
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ImageIO.write(bufferedThumbnail, formatName, baos);
+        return baos.toByteArray();
+    }
+
 }

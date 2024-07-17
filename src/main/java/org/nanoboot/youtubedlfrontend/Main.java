@@ -18,6 +18,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////
 package org.nanoboot.youtubedlfrontend;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -289,7 +290,15 @@ public class Main {
                     .append(youtubeVideo.getMiniThumbnailFormat()).toString();
                 if (thumbnailAsBase64) {
                     try {
-                        byte[] bytes= Files.readAllBytes(new File(archiveBoxRootDirectory + "/" + thumbnailPath).toPath());
+                        byte[] bytes = Files.readAllBytes(new File(archiveBoxRootDirectory + "/" + thumbnailPath).toPath());
+                        System.out.println("###=" + archiveBoxRootDirectory + "/" + thumbnailPath);
+                        ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+                        try {
+                            bytes = Utils.resizeImage(bais, 25, (int) (9d / 16d * 25d), youtubeVideo.getThumbnailFormat());
+                        } catch (Exception e) {
+                            //bytes = Utils.resizeImage(bais, 125, (int) (9d / 16d * 125d), "webp");
+                        }
+                        
                         String bytesS = "data:image/jpg;base64, " + org.nanoboot.powerframework.io.bit.base64.Base64Coder.encode(bytes);
                         sb.append(bytesS);
                     } catch (IOException ex) {
