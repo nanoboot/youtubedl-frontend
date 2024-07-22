@@ -33,6 +33,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import static org.nanoboot.youtubedlfrontend.Args.TWO_DASHES;
 
 /**
  * @author <a href="mailto:robertvokac@nanoboot.org">Robert Vokac</a>
@@ -42,118 +43,23 @@ public class Main {
 
     private static int iii = 0;
     private static int internalStaticVariableVideoNumberPerRow = 0;
-    public static boolean argAlwaysGenerateMetadata = true;
-    public static boolean argAlwaysGenerateHtmlFiles = true;
-    public static boolean thumbnailAsBase64 = false;
-    public static boolean thumbnailLinksToYoutube = false;
-    public static int argVideosPerRow = 4;
+
     public static int THUMBNAIL_WIDTH = 250;
-    public static String argVideo;
-    public static String argChannel;
+
 
     public static void main(String[] args) throws IOException, InterruptedException {
         System.out.println("youtubedlfrontend - HTML generator\n");
 
-        //args = "/rv/databig/youtube --_video UDpsz1yIwiw --always-generate-metadata 1 --always-generate-html-files 1 --videos-per-row 4".split(" ");
         if (args.length < 1) {
             //System.err.println("At least one argument is expected, but the count of arguments is: " + args.length + ".");
             String argsS = "/rv/blupi/archivebox --_video UDpsz1yIwiw --always-generate-metadata 0 "
-                    + " --always-generate-html-files 1 --videos-per-row 4 --thumbnail-links-to-youtube 1"
+                    + " --always-generate-html-files 0 --videos-per-row 4 --thumbnail-links-to-youtube 1"
                     + " --thumbnail-as-base64 1";
             args = argsS.split(" ");
             //System.exit(1);
         }
-        argVideo = "";
-        argChannel = "";
-        if (args.length > 0) {
-            for (int i = 0; i < args.length; i++) {
-                String arg = args[i];
-                if (i == 0 && !arg.startsWith(TWO_DASHES)) {
-                    continue;
-                }
-                if (arg.equals("--video")) {
-                    i++;
-                    if (i >= args.length) {
-                        throw new YoutubedlFrontendException("Fatal error: missing value for --video");
-                    }
-                    argVideo = args[i];
-                }
-                if (arg.equals("--channel")) {
-                    i++;
-                    if (i >= args.length) {
-                        throw new YoutubedlFrontendException("Fatal error: missing value for --channel");
-                    }
-                    argChannel = args[i];
-                }
-
-                if (arg.equals("--videos-per-row")) {
-                    i++;
-                    if (i >= args.length) {
-                        throw new YoutubedlFrontendException("Fatal error: missing value for --videos-per-row");
-                    }
-                    argVideosPerRow = Integer.parseInt(args[i]);
-                    if (argVideosPerRow < 2) {
-                        argVideosPerRow = 0;
-                    }
-                }
-
-                if (arg.equals("--always-generate-metadata")) {
-                    i++;
-                    if (i >= args.length) {
-                        throw new YoutubedlFrontendException("Fatal error: missing value for --always-generate-metadata");
-                    }
-                    String s = args[i];
-
-                    try {
-                        argAlwaysGenerateMetadata = Utils.convertStringToBoolean(s);
-                    } catch (Exception e) {
-                        throw new YoutubedlFrontendException("Invalid value for --always-generate-metadata");
-                    }
-                }
-
-                if (arg.equals("--always-generate-html-files")) {
-                    i++;
-                    if (i >= args.length) {
-                        throw new YoutubedlFrontendException("Fatal error: missing value for --always-generate-html-files");
-                    }
-                    String s = args[i];
-                    try {argAlwaysGenerateHtmlFiles = Utils.convertStringToBoolean(s);} catch(Exception e) {
-                            throw new YoutubedlFrontendException("Invalid value for --always-generate-html-files");
-                    }
-
-                }
-                
-               if (arg.equals("--thumbnail-as-base64")) {
-                    i++;
-                    if (i >= args.length) {
-                        throw new YoutubedlFrontendException("Fatal error: missing value for --thumbnail-as-base64");
-                    }
-                    String s = args[i];
-                                        try {thumbnailAsBase64 = Utils.convertStringToBoolean(s);} catch(Exception e) {
-                            throw new YoutubedlFrontendException("Invalid value for --thumbnail-as-base64");
-                    }
-                  
-
-                }
-               
-                if (arg.equals("--thumbnail-links-to-youtube")) {
-                    i++;
-                    if (i >= args.length) {
-                        throw new YoutubedlFrontendException("Fatal error: missing value for --thumbnail-links-to-youtube");
-                    }
-                    String s = args[i];
-                    try {
-                        thumbnailLinksToYoutube = Utils.convertStringToBoolean(s);
-                    } catch (Exception e) {
-                        throw new YoutubedlFrontendException("Invalid value for --thumbnail-links-to-youtube");
-                    }
-
-                }
-
-               
-               
-            }
-        }
+        Args argsInstance = new Args(args);
+        System.out.println(argsInstance.toString());
         String workingDirectory = args.length > 0 && !args[0].startsWith(TWO_DASHES) ? args[0] : new File(".").getAbsolutePath();
 
         File archiveBoxRootDirectory = new File(workingDirectory);
@@ -167,16 +73,14 @@ public class Main {
                 //nothing to do
                 continue;
             }
-            YoutubeVideo youtubeVideo = new YoutubeVideo(mediaDirectory);
-            if (!Main.argVideo.isBlank() && !youtubeVideo.getId().equals(Main.argVideo)) {
+            YoutubeVideo youtubeVideo = new YoutubeVideo(mediaDirectory, argsInstance.getBoolean(ArgType.ALWAYS_GENERATE_METADATA).get(), argsInstance.getString(ArgType.VIDEO).orElse(""));
+            if (argsInstance.getString(ArgType.VIDEO).isPresent() && !argsInstance.getString(ArgType.VIDEO).equals(youtubeVideo.getId())) {
                 continue;
             }
-            if (!argVideo.isBlank() && !youtubeVideo.getId().equals(argVideo)) {
+            if (argsInstance.getString(ArgType.CHANNEL).isPresent() && !argsInstance.getString(ArgType.CHANNEL).equals(youtubeVideo.getChannelId())) {
                 continue;
             }
-            if (!argChannel.isBlank() && !youtubeVideo.getChannelId().equals(argChannel)) {
-                continue;
-            }
+
             i++;
             System.out.println("\n\nFound video #" + i);
 
@@ -244,6 +148,9 @@ public class Main {
                   <head>
                   <link rel="icon" type="image/x-icon" href="favicon.ico" sizes="16x16">
                   <title>Youtube videos</title>
+                  
+                  <!-- Generated by: https://code.nanoboot.org/nanoboot/youtubedl-frontend -->
+                  
                   <style>
                   body {padding:20px;}
                   * {
@@ -264,7 +171,7 @@ public class Main {
         NumberFormat formatter = new DecimalFormat("#0.00");
         channels.forEach(c -> {
             sb.append("<h1>").append(c).append("</h1>\n");
-            sb.append("<div style=\"max-width:").append((Main.THUMBNAIL_WIDTH + 20) * Main.argVideosPerRow).append("px\"><a href =\"").append(channelUrls.get(c)).append("\">").append(channelUrls.get(c)).append("</a><div class=\"videos\">");
+            sb.append("<div style=\"max-width:").append((Main.THUMBNAIL_WIDTH + 20) * argsInstance.getInteger(ArgType.VIDEOS_PER_ROW).get()).append("px\"><a href =\"").append(channelUrls.get(c)).append("\">").append(channelUrls.get(c)).append("</a><div class=\"videos\">");
             iii = 0;
             internalStaticVariableVideoNumberPerRow = 0;
             sb.append("<table>\n");
@@ -277,7 +184,7 @@ public class Main {
                 sb.append("<td><div class=\"box\"><table style=\"margin:5px;max-width:")
                         .append(THUMBNAIL_WIDTH)
                         .append("px;\">\n<tr><td><a href=\"");
-                if (thumbnailLinksToYoutube) {
+                if (argsInstance.getBoolean(ArgType.THUMBNAIL_LINKS_TO_YOUTUBE).get()) {
                     sb.append("https://www.youtube.com/watch?v=").append(youtubeVideo.getId());
                 } else {
                     sb.append("videos/" + youtubeVideo.getId() + ".html");
@@ -288,7 +195,7 @@ public class Main {
                     .append(youtubeVideo.getSnapshot())
                     .append("/media/mini-thumbnail.")
                     .append(youtubeVideo.getMiniThumbnailFormat()).toString();
-                if (thumbnailAsBase64) {
+                if (argsInstance.getBoolean(ArgType.THUMBNAIL_AS_BASE64).get()) {
                     try {
                         byte[] bytes = Files.readAllBytes(new File(archiveBoxRootDirectory + "/" + thumbnailPath).toPath());
                         System.out.println("###=" + archiveBoxRootDirectory + "/" + thumbnailPath);
@@ -319,12 +226,12 @@ public class Main {
                         .append("</td></tr>\n");
                 youtubeVideo.setNumber(iii);
                 sb.append("</table></div></td>\n");
-                if (internalStaticVariableVideoNumberPerRow == argVideosPerRow) {
+                if (internalStaticVariableVideoNumberPerRow == argsInstance.getInteger(ArgType.VIDEOS_PER_ROW).get()) {
                     sb.append("<tr>");
                     internalStaticVariableVideoNumberPerRow = 0;
                 }
                 File videoHtmlFile = new File(videosDirectory, youtubeVideo.getId() + ".html");
-                if (!videoHtmlFile.exists() || argAlwaysGenerateHtmlFiles) {
+                if (!videoHtmlFile.exists() || argsInstance.getBoolean(ArgType.ALWAYS_GENERATE_HTML_FILES).get()) {
 
                     {
                         StringBuilder videoHtml = new StringBuilder("""
@@ -484,7 +391,7 @@ public class Main {
                     }
                 }
             });
-            if (internalStaticVariableVideoNumberPerRow < argVideosPerRow) {
+            if (internalStaticVariableVideoNumberPerRow < argsInstance.getInteger(ArgType.VIDEOS_PER_ROW).get()) {
                 sb.append("<tr>");
             }
             sb.append("</table>\n");
@@ -501,6 +408,5 @@ public class Main {
         System.out.println("[Warning] Snapshots without videos:");
         YoutubeVideo.missingYoutubeVideos.forEach(s -> System.out.println(s));
     }
-    private static final String TWO_DASHES = "--";
 
 }

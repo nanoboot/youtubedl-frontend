@@ -23,7 +23,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
-import javax.imageio.ImageIO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -62,9 +61,9 @@ public class YoutubeVideo implements Comparable<YoutubeVideo> {
     //
     public static final List<String> missingYoutubeVideos = new ArrayList<>();
 
-    public YoutubeVideo(File mediaDirectory) throws InterruptedException, IOException {
+    public YoutubeVideo(File mediaDirectory, boolean argAlwaysGenerateMetadata, String argVideo) throws InterruptedException, IOException {
         File metadataFile = new File(mediaDirectory, "metadata");
-        if (!Main.argAlwaysGenerateMetadata && metadataFile.exists()) {
+        if (argAlwaysGenerateMetadata && metadataFile.exists()) {
 
             YoutubeVideo yv = new YoutubeVideo();
             //new ObjectMapper().readValue(Utils.readTextFromFile(metadataFile), YoutubeVideo.class);
@@ -75,7 +74,7 @@ public class YoutubeVideo implements Comparable<YoutubeVideo> {
 
             id = properties.getProperty("id");
 
-            if (!Main.argVideo.isBlank() && !id.equals(Main.argVideo)) {
+            if (!argVideo.isBlank() && !id.equals(argVideo)) {
                 return;
             }
             snapshot = properties.getProperty("snapshot");
@@ -212,7 +211,7 @@ public class YoutubeVideo implements Comparable<YoutubeVideo> {
                 .filter(f
                         -> (f.getName().endsWith("." + ext))
                 || (f.getName().endsWith(".mp4"))
-                || (f.getName().endsWith(".mkv"))
+                || (f.getName().endsWith(".mkv"))|| (f.getName().endsWith(".webm"))
                 )
                 //                .filter(
                 //                        f -> !f.getName().endsWith(".description")
