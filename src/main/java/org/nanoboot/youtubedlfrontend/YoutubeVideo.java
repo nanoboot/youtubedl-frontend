@@ -20,6 +20,7 @@ import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
@@ -63,7 +64,7 @@ public class YoutubeVideo implements Comparable<YoutubeVideo> {
 
     public YoutubeVideo(File mediaDirectory, boolean argAlwaysGenerateMetadata, String argVideo) throws InterruptedException, IOException {
         File metadataFile = new File(mediaDirectory, "metadata");
-        if (argAlwaysGenerateMetadata && metadataFile.exists()) {
+        if (!argAlwaysGenerateMetadata && metadataFile.exists()) {
 
             YoutubeVideo yv = new YoutubeVideo();
             //new ObjectMapper().readValue(Utils.readTextFromFile(metadataFile), YoutubeVideo.class);
@@ -131,7 +132,7 @@ public class YoutubeVideo implements Comparable<YoutubeVideo> {
                 continue;
             } else {
                 int width = o.getInt("width");
-                if (width < (((double)Main.THUMBNAIL_WIDTH) * 0.8d)) {
+                if (width < (((double) Main.THUMBNAIL_WIDTH) * 0.8d)) {
                     continue;
                 }
                 miniThumbnail = o.getString("url");
@@ -147,7 +148,6 @@ public class YoutubeVideo implements Comparable<YoutubeVideo> {
 //        new File(mediaDirectory, "mini-thumbnail.jpg").delete();
 //        new File(mediaDirectory, "thumbnail.webp").delete();
 //        new File(mediaDirectory, "mini-thumbnail.webp").delete();
-
         if (thumbnail != null) {
             if (!thumbnailFile.exists()) {
                 try (BufferedInputStream in = new BufferedInputStream(new URL(thumbnail).openStream()); FileOutputStream fileOutputStream = new FileOutputStream(thumbnailFile.getAbsolutePath())) {
@@ -171,35 +171,7 @@ public class YoutubeVideo implements Comparable<YoutubeVideo> {
                     System.out.println(e.getMessage());
                 }
             }
-//            for (String s : ImageIO.getReaderFormatNames()) {
-//                System.out.println(s);
-//            }
-            //if(!miniThumbnailFile.exists()) {
 
-//String miniThumbnailFileAbsolutePath = miniThumbnailFile.getAbsolutePath();
-//            String formatName = miniThumbnailFileAbsolutePath.substring(miniThumbnailFileAbsolutePath
-//                    .lastIndexOf(".") + 1);
-//            BufferedImage inputImage = ImageIO.read(thumbnailFile);
-//            if(inputImage == null) {
-//
-//            }
-//            int thumbnailWidth = inputImage.getWidth();
-//            int thumbnailHeight = inputImage.getHeight();
-//            double heightWidthRatio = ((double) thumbnailHeight) / ((double) thumbnailWidth);
-//            int miniThumbnailWidth = Main.THUMBNAIL_WIDTH;
-//            int miniThumbnailHeight = (int) (heightWidthRatio * ((double) Main.THUMBNAIL_WIDTH));
-//
-//            BufferedImage outputImage = new BufferedImage(miniThumbnailWidth,
-//                    miniThumbnailHeight, inputImage.getType());
-//
-//            Graphics2D g2d = outputImage.createGraphics();
-//            g2d.drawImage(inputImage, 0, 0, miniThumbnailWidth, miniThumbnailHeight, null);
-//            g2d.dispose();
-//
-//            
-//
-//            ImageIO.write(outputImage, formatName, new File(miniThumbnailFileAbsolutePath));
-            //}
         }
         //
         Optional<File> descriptionFile = files.stream().filter(f -> f.getName().endsWith(".description")).findFirst();
@@ -211,14 +183,9 @@ public class YoutubeVideo implements Comparable<YoutubeVideo> {
                 .filter(f
                         -> (f.getName().endsWith("." + ext))
                 || (f.getName().endsWith(".mp4"))
-                || (f.getName().endsWith(".mkv"))|| (f.getName().endsWith(".webm"))
+                || (f.getName().endsWith(".mkv")) || (f.getName().endsWith(".webm"))
                 )
-                //                .filter(
-                //                        f -> !f.getName().endsWith(".description")
-                //                        && !f.getName().endsWith(".json")
-                //                        && !f.getName().equals("metadata")
-                //                        && !f.getName().endsWith(thumbnail)
-                //                )
+
                 .findFirst();
 
         snapshot = mediaDirectory.getParentFile().getName();
@@ -303,23 +270,24 @@ public class YoutubeVideo implements Comparable<YoutubeVideo> {
     public String getMiniThumbnailFormat() {
         return getExtensionFromUrl(miniThumbnail);
     }
+
     private String getExtensionFromUrl(String url) {
-                String result = url.substring(url
+        String result = url.substring(url
                 .lastIndexOf(".") + 1);
         int questionMarkIndex = 0;
-        for(int i = 0;i<result.length();i++) {
+        for (int i = 0; i < result.length(); i++) {
             char ch = result.charAt(i);
-            if(ch != '?') {
+            if (ch != '?') {
                 continue;
             } else {
                 questionMarkIndex = i;
             }
         }
-        if(questionMarkIndex > 0) {
+        if (questionMarkIndex > 0) {
             result = result.substring(0, questionMarkIndex);
         }
         return result;
-        
+
     }
 
     /**
@@ -357,6 +325,71 @@ public class YoutubeVideo implements Comparable<YoutubeVideo> {
                 return 0;
             }
         }
+    }
+
+    public static List<YoutubeVideo> loadYoutubeVideos(File archiveBoxArchiveDirectory, Args argsInstance) throws IOException, InterruptedException {
+        int i = 0;
+        List<YoutubeVideo> youtubeVideos = new ArrayList<>();
+        for (File snapshotDirectory : archiveBoxArchiveDirectory.listFiles()) {
+            //if(i> 40)break;//only for tests
+            File mediaDirectory = new File(snapshotDirectory, "media");
+            if (!mediaDirectory.exists()) {
+                //nothing to do
+                continue;
+            }
+            YoutubeVideo youtubeVideo = new YoutubeVideo(mediaDirectory, argsInstance.getBoolean(ArgType.ALWAYS_GENERATE_METADATA).get(), argsInstance.getString(ArgType.VIDEO).orElse(""));
+            if (argsInstance.getString(ArgType.VIDEO).isPresent() && !argsInstance.getString(ArgType.VIDEO).equals(youtubeVideo.getId())) {
+                continue;
+            }
+            if (argsInstance.getString(ArgType.CHANNEL).isPresent() && !argsInstance.getString(ArgType.CHANNEL).equals(youtubeVideo.getChannelId())) {
+                continue;
+            }
+
+            i++;
+            System.out.println("\n\nFound video #" + i);
+
+            for (File f : new File(archiveBoxArchiveDirectory + "/" + youtubeVideo.getSnapshot() + "/media/" + youtubeVideo.getVideoFileName()).getParentFile().listFiles()) {
+                if (f.getName().endsWith(".webm")) {
+                    //mkv file was manually converted to webm
+                    youtubeVideo.setVideoFileName(f.getName());
+                    break;
+                }
+
+            }
+            System.out.println("id = " + youtubeVideo.getId());
+            System.out.println("snapshot = " + youtubeVideo.getSnapshot());
+            System.out.println("title = " + youtubeVideo.getTitle());
+            System.out.println("videoFileName = " + youtubeVideo.getVideoFileName());
+            System.out.println("videoFileSizeInBytes = " + youtubeVideo.getVideoFileSizeInBytes());
+            System.out.println("videoFileSha512HashSum = " + youtubeVideo.getVideoFileSha512HashSum());
+            System.out.println("videoDuration = " + youtubeVideo.getVideoDuration());
+            System.out.println("channelName = " + youtubeVideo.getChannelName());
+            System.out.println("channelUrl = " + youtubeVideo.getChannelUrl());
+            System.out.println("uploadDate = " + youtubeVideo.getUploadDate());
+            System.out.println("description = " + youtubeVideo.getDescription());
+            System.out.println("thumbnail = " + youtubeVideo.getThumbnail());
+            System.out.println("miniThumbnail = " + youtubeVideo.getMiniThumbnail());
+            System.out.println("comments = " + youtubeVideo.getComments());
+            youtubeVideos.add(youtubeVideo);
+        }
+        Collections.sort(youtubeVideos);
+        YoutubeVideo previousVideo = null;
+        YoutubeVideo nextVideo = null;
+        YoutubeVideo currentVideo = null;
+        for (int j = 0; j < youtubeVideos.size(); j++) {
+            previousVideo = currentVideo;
+            currentVideo = youtubeVideos.get(j);
+            if (j < (youtubeVideos.size() - 1)) {
+                nextVideo = youtubeVideos.get(j + 1);
+            }
+            if (previousVideo != null) {
+                currentVideo.setPreviousVideoId(previousVideo.getId());
+            }
+            if (nextVideo != null) {
+                currentVideo.setNextVideoId(nextVideo.getId());
+            }
+        }
+        return youtubeVideos;
     }
 
 }

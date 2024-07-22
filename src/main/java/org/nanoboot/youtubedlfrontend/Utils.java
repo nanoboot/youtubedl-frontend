@@ -24,7 +24,6 @@ import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,6 +34,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.text.DateFormat;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import javax.imageio.ImageIO;
@@ -48,6 +49,7 @@ public class Utils {
     private static final String UNDERSCORE = "_";
 
     public static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+    public static final NumberFormat TWO_DECIMAL_POINTS_FORMATTER = new DecimalFormat("#0.00");
     private Utils() {
         //Not meant to be instantiated.
     }
@@ -187,6 +189,7 @@ public class Utils {
                 throw new YoutubedlFrontendException("Could not create boolean from String: " + s);
         }
     }
+
     public static byte[] resizeImage(InputStream inputStream, int width, int height, String formatName) throws IOException {
         BufferedImage sourceImage = ImageIO.read(inputStream);
         Image thumbnail = sourceImage.getScaledInstance(width, height, Image.SCALE_SMOOTH);

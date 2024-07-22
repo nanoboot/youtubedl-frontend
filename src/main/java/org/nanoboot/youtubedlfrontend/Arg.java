@@ -25,10 +25,10 @@ import lombok.Data;
  *
  * @author robertvokac
  */
-
 @Data
 @AllArgsConstructor
 public class Arg {
+
     private ArgType argType;
     private String value;
 }

@@ -43,13 +43,15 @@ public class YoutubeComment implements Comparable<YoutubeComment> {
         author = jsonObject.getString("author");
         timestamp = jsonObject.getInt("timestamp");
     }
+
     public static List<YoutubeComment> sort(List<YoutubeComment> list) {
-        
+
         List<YoutubeComment> root = getChildren(list, "root");
         Collections.sort(root);
         return list;
         //return sort(list, new ArrayList<>(), "root");
     }
+
     private static List<YoutubeComment> getChildren(List<YoutubeComment> all, String parentId) {
         final List<YoutubeComment> children = all.stream().filter(c -> c.getParentId().equals(parentId)).sorted().toList();
         List<YoutubeComment> result = new ArrayList<>();
@@ -59,7 +61,7 @@ public class YoutubeComment implements Comparable<YoutubeComment> {
         });
         return result;
     }
-    
+
     @Override
     public int compareTo(YoutubeComment o) {
         //if(this.timestamp != o.timestamp) {

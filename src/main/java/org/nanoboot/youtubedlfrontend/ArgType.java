@@ -36,9 +36,10 @@ public enum ArgType {
     private String name;
     @Getter
     private String defaultValue;
+
     ArgType(String name, String defaultValue) {
         this.name = name;
         this.defaultValue = defaultValue;
     }
-    
+
 }
