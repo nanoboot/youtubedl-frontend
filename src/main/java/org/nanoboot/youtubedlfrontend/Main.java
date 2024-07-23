@@ -21,15 +21,9 @@ package org.nanoboot.youtubedlfrontend;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,9 +45,10 @@ public class Main {
 
         if (args.length < 1) {
             //System.err.println("At least one argument is expected, but the count of arguments is: " + args.length + ".");
-            String argsS = "/rv/blupi/archivebox --_video UDpsz1yIwiw --always-generate-metadata 0"
-                    + " --always-generate-html-files 0 --videos-per-row 4 --thumbnail-links-to-youtube 1"
-                    + " --thumbnail-as-base64 1";
+            String argsS = "/rv/blupi/archivebox --video_ 7qKUtn76q30 --always-generate-metadata 1"
+                    + " --always-generate-html-files 1 --videos-per-row 4 --thumbnail-links-to-youtube 0"
+                    + " --thumbnail-as-base64 1"
+                    + " --channel_ UCqBpgfXap7cZOYkAC34u8Lg ";
             args = argsS.split(" ");
             //System.exit(1);
         }
@@ -75,6 +70,7 @@ public class Main {
                 channels.add(channelName_);
             }
         });
+        Collections.sort(channels, (String o1, String o2) -> o1.toLowerCase().compareTo(o2.toLowerCase()));
 
         File videosHtmlFile = new File(archiveBoxRootDirectory, "videos.html");
         File videosDirectory = new File(archiveBoxRootDirectory, "videos");
@@ -147,7 +143,7 @@ public class Main {
                 if (argsInstance.getBoolean(ArgType.THUMBNAIL_LINKS_TO_YOUTUBE).get()) {
                     oneChannelStringBuilder.append("https://www.youtube.com/watch?v=").append(youtubeVideo.getId());
                 } else {
-                    oneChannelStringBuilder.append("videos/" + youtubeVideo.getId() + ".html");
+                    oneChannelStringBuilder.append("../videos/" + youtubeVideo.getId() + ".html");
                 }
                 oneChannelStringBuilder.append("\" target=\"_blank\"><img src=\"");
                 String thumbnailPath = new StringBuilder()
