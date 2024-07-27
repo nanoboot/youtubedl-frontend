@@ -326,7 +326,7 @@ public class YoutubeVideo implements Comparable<YoutubeVideo> {
             }
         }
     }
-
+    public static long totalDurationInMilliseconds = 0l;
     public static List<YoutubeVideo> loadYoutubeVideos(File archiveBoxArchiveDirectory, Args argsInstance) throws IOException, InterruptedException {
         int i = 0;
         List<YoutubeVideo> youtubeVideos = new ArrayList<>();
@@ -363,6 +363,8 @@ public class YoutubeVideo implements Comparable<YoutubeVideo> {
             System.out.println("videoFileSizeInBytes = " + youtubeVideo.getVideoFileSizeInBytes());
             System.out.println("videoFileSha512HashSum = " + youtubeVideo.getVideoFileSha512HashSum());
             System.out.println("videoDuration = " + youtubeVideo.getVideoDuration());
+            System.out.println("getVideoDurationInMilliseconds = " + youtubeVideo.getVideoDurationInMilliseconds());
+            totalDurationInMilliseconds = totalDurationInMilliseconds + youtubeVideo.getVideoDurationInMilliseconds();
             System.out.println("channelName = " + youtubeVideo.getChannelName());
             System.out.println("channelUrl = " + youtubeVideo.getChannelUrl());
             System.out.println("uploadDate = " + youtubeVideo.getUploadDate());
@@ -390,6 +392,26 @@ public class YoutubeVideo implements Comparable<YoutubeVideo> {
             }
         }
         return youtubeVideos;
+    }
+    public long getVideoDurationInMilliseconds() {
+        String duration = videoDuration;
+        String[] array = duration.split(":");
+        long ms = Long.valueOf(array[0]) * 60l *60l * 1000l;
+        ms = ms + Long.valueOf(array[1]) * 60l * 1000l;
+        String[] array2 = array[2].split("\\.");
+        ms = ms + Long.valueOf(array2[0]) * 1000l;
+        ms = ms + Long.valueOf(array2[1]);
+        return ms;
+    }
+
+    long getVideoDurationInMinutes() {
+        double s = getVideoDurationInMilliseconds();
+        return (long) (s / 1000d / 60d);
+    }
+
+    long getVideoFileSizeInMegaBytes() {
+        double b = getVideoFileSizeInBytes();
+        return (long) (b / 1024d / 1024d);
     }
 
 }

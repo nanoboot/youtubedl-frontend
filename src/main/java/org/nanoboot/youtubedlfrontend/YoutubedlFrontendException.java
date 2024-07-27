@@ -19,7 +19,7 @@
 package org.nanoboot.youtubedlfrontend;
 
 /**
- * @author <a href="mailto:robertvokac@nanoboot.org">Robert Vokac</a>
+ * @author <a href="mailto:mail@robertvokac.com">Robert Vokac</a>
  * @since 0.0.0
  */
 public class YoutubedlFrontendException extends RuntimeException {

@@ -24,13 +24,14 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import static org.nanoboot.youtubedlfrontend.Args.TWO_DASHES;
 
 /**
- * @author <a href="mailto:robertvokac@nanoboot.org">Robert Vokac</a>
+ * @author <a href="mailto:mail@robertvokac.com">Robert Vokac</a>
  * @since 0.0.0
  */
 public class Main {
@@ -45,9 +46,9 @@ public class Main {
 
         if (args.length < 1) {
             //System.err.println("At least one argument is expected, but the count of arguments is: " + args.length + ".");
-            String argsS = "/rv/blupi/archivebox --video_ 7qKUtn76q30 --always-generate-metadata 1"
-                    + " --always-generate-html-files 1 --videos-per-row 4 --thumbnail-links-to-youtube 0"
-                    + " --thumbnail-as-base64 1"
+            String argsS = "/rv/blupi/archivebox --video_ 7qKUtn76q30 --always-generate-metadata 0"
+                    + " --always-generate-html-files 0 --videos-per-row 4 --thumbnail-links-to-youtube 0"
+                    + " --thumbnail-as-base64 0"
                     + " --channel_ UCqBpgfXap7cZOYkAC34u8Lg ";
             args = argsS.split(" ");
             //System.exit(1);
@@ -91,6 +92,22 @@ public class Main {
 
         System.out.println("[Warning] Snapshots without videos:");
         YoutubeVideo.missingYoutubeVideos.forEach(s -> System.out.println(s));
+        System.out.println("Total duration: " + ((int)((((double)YoutubeVideo.totalDurationInMilliseconds) / 1000d / 60d / 60d))) + " hours");
+        youtubeVideos.sort(new Comparator<YoutubeVideo>() {
+            @Override
+            public int compare(YoutubeVideo o1, YoutubeVideo o2) {
+                return Long.valueOf(o1.getVideoDurationInMilliseconds()).compareTo(o2.getVideoDurationInMilliseconds());
+            }
+        });
+        youtubeVideos.forEach(y-> {System.out.println(y.getVideoDurationInMinutes() + " = minutes \t" + "https://youtube.com/watch?v=" + y.getId() + "\t" + y.getTitle());});
+        System.out.println("\n\n\n\n");
+        youtubeVideos.sort(new Comparator<YoutubeVideo>() {
+            @Override
+            public int compare(YoutubeVideo o1, YoutubeVideo o2) {
+                return Long.valueOf(o1.getVideoFileSizeInBytes()).compareTo(o2.getVideoFileSizeInBytes());
+            }
+        });
+        youtubeVideos.forEach(y-> {System.out.println(y.getVideoFileSizeInMegaBytes()+ " MB \t" + "https://youtube.com/watch?v=" + y.getId() + "\t" + y.getTitle());});
     }
 
     private static StringBuilder createChannelHtml(String wantedChannelName, List<String> channels, Args argsInstance, Map<String, String> channelUrls, List<YoutubeVideo> youtubeVideos, File archiveBoxRootDirectory, File videosDirectory, File archiveBoxArchiveDirectory) {
@@ -168,7 +185,7 @@ public class Main {
                         throw new YoutubedlFrontendException(ex.getMessage());
                     }
                 } else {
-                    oneChannelStringBuilder.append(thumbnailPath);
+                    oneChannelStringBuilder.append("../" + thumbnailPath);
                 }
                 oneChannelStringBuilder.append("\" width=\"")
                         .append(THUMBNAIL_WIDTH)
